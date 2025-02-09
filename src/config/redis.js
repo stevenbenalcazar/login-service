@@ -1,13 +1,18 @@
-const Redis = require('ioredis');
-require('dotenv').config();
+const redis = require('redis');
 
-const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: process.env.REDIS_PORT,
-  password: process.env.REDIS_PASSWORD, // Opcional si Redis requiere autenticación
+const redisClient = redis.createClient({
+  socket: {
+    host: process.env.REDIS_HOST || 'localhost', // ✅ Usa host.docker.internal si está en Docker
+    port: process.env.REDIS_PORT || 6379
+  }
 });
 
-redis.on('connect', () => console.log('Conexión a Redis establecida.'));
-redis.on('error', (err) => console.error('Error en Redis:', err));
+redisClient.on('error', (err) => {
+  console.error('❌ Redis Error:', err);
+});
 
-module.exports = redis;
+redisClient.connect().then(() => {
+  console.log('🟢 Redis conectado correctamente');
+}).catch(err => console.error('❌ Error conectando a Redis:', err));
+
+module.exports = redisClient;
