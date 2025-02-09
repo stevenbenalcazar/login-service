@@ -43,7 +43,9 @@ jobs:
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             docker pull redis:latest
-            docker run -d --name redis -p 6379:6379 --restart always redis
+            docker stop redis || true
+            docker rm redis || true
+            docker run -d --name redis -p 6379:6379 redis:latest
           EOF
 
       - name: 🛠️ Construir y subir imagen Docker
