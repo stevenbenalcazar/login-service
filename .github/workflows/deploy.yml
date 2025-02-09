@@ -52,6 +52,18 @@ jobs:
           docker tag login-service:latest ${{ secrets.DOCKER_USERNAME }}/login-service:latest
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/login-service:latest
+      
+      - name: 📄 Crear archivo .env en EC2
+        run: |
+          ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "DB_HOST=${{ secrets.DB_HOST }}" > ~/login-service.env
+            echo "DB_NAME=dbusers" >> ~/login-service.env
+            echo "DB_USER=user_db" >> ~/login-service.env
+            echo "DB_PASSWORD=12345" >> ~/login-service.env
+            echo "JWT_SECRET=supersecretkey" >> ~/login-service.env
+            echo "REDIS_HOST=redis" >> ~/login-service.env
+            echo "REDIS_PORT=6379" >> ~/login-service.env
+          EOF
 
       - name: 🚀 Desplegar en EC2 usando .env
         run: |
