@@ -66,13 +66,13 @@ jobs:
             echo "REDIS_HOST=redis" >> ~/login-service.env
             echo "REDIS_PORT=6379" >> ~/login-service.env
           EOF
-
+          
       - name: 🚀 Desplegar en EC2 usando .env
         run: |
           ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            docker pull ${{ secrets.DOCKER_USERNAME }}/login-service:latest
             docker stop login-service || true
             docker rm login-service || true
+            docker pull ${{ secrets.DOCKER_USERNAME }}/login-service:latest
             docker run -d --name login-service -p 3000:3000 \
               --network bridge \
               --env-file ~/login-service.env \
