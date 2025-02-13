@@ -14,7 +14,7 @@ class AuthController {
 
       // Intentar obtener el usuario desde Redis
       const cachedUser = await redisClient.hGetAll(email);
-      if (cachedUser && cachedUser.id) {
+      if (cachedUser && cachedUser.password) {
         console.log("🟢 Usuario encontrado en Redis");
         user = cachedUser;
       } else {
@@ -26,33 +26,42 @@ class AuthController {
           return res.status(401).json({ error: "Credenciales inválidas" });
         }
 
-        // Almacenar en Redis sin guardar la contraseña
+        console.log("✅ Usuario obtenido de PostgreSQL:", user);
+
+        // Almacenar en Redis para futuras consultas
         await redisClient.hSet(email, {
           id: user.id,
           email: user.email,
-          username: user.username
+          password: user.password,
         });
       }
 
+      if (!user.password) {
+        console.error("❌ Error: La contraseña obtenida es undefined.");
+        return res.status(500).json({ error: "Error interno del servidor" });
+      }
+
       // Verificar contraseña
-      const isValidPassword = await AuthService.verifyPassword(password, user.password);
+      const isValidPassword = await AuthService.verifyPassword(
+        password,
+        user.password
+      );
       if (!isValidPassword) {
         return res.status(401).json({ error: "Credenciales inválidas" });
       }
 
       // Generar token JWT
-      const token = AuthService.generateToken({ id: user.id, email: user.email });
+      const token = AuthService.generateToken({
+        id: user.id,
+        email: user.email,
+      });
 
       // Guardar sesión en Redis con expiración de 1 hora
       await redisClient.set(`session:${user.id}`, token, { EX: 3600 });
 
-      return res.json({ 
-        message: "Inicio de sesión exitoso", 
-        token 
-      });
-
+      return res.json({ message: "Inicio de sesión exitoso", token });
     } catch (error) {
-      console.error("Error en el login:", error);
+      console.error("❌ Error en el login:", error);
       return res.status(500).json({ error: "Error interno del servidor" });
     }
   }
