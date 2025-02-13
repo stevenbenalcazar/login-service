@@ -1,18 +1,13 @@
-const redis = require('redis');
+const { createClient } = require("redis");
 
-const redisClient = redis.createClient({
-  socket: {
-    host: process.env.REDIS_HOST || 'localhost', // ✅ Usa host.docker.internal si está en Docker
-    port: process.env.REDIS_PORT || 6379
-  }
+const redisClient = createClient({
+  url: "redis://redis:6379", // Se usa el nombre del contenedor en la red de Docker
 });
 
-redisClient.on('error', (err) => {
-  console.error('❌ Redis Error:', err);
+redisClient.on("error", (err) => {
+  console.error("❌ Redis Error:", err);
 });
 
-redisClient.connect().then(() => {
-  console.log('🟢 Redis conectado correctamente');
-}).catch(err => console.error('❌ Error conectando a Redis:', err));
+redisClient.connect();
 
 module.exports = redisClient;
