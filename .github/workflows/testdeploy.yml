@@ -3,7 +3,7 @@ name: 🚀 Deploy Login Service
 on:
   push:
     branches:
-      - main
+      - test
 
 jobs:
   build-and-deploy:
